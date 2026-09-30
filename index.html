@@ -1,1 +1,314 @@
-PLACEHOLDER_INDEX
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中国の一人当たりGDPの推移（1960–2025）</title>
+<meta name="description" content="世界銀行データに基づく中国の一人当たりGDP（名目・米ドル）の時系列グラフ。1960年から2025年まで。">
+<style>
+  :root {
+    --bg: #f7f6f3;
+    --card: #ffffff;
+    --ink: #1a1a1a;
+    --muted: #6b6b6b;
+    --accent: #c23b22;
+    --line: #e6e3dd;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Helvetica Neue", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", Meiryo, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 48px 20px 64px; }
+  header { margin-bottom: 28px; }
+  .kicker {
+    font-size: 13px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700; margin-bottom: 8px;
+  }
+  h1 { font-size: clamp(24px, 4vw, 34px); font-weight: 800; letter-spacing: .01em; }
+  .sub { color: var(--muted); margin-top: 8px; font-size: 15px; }
+  .stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px; margin: 24px 0;
+  }
+  .stat {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .stat .label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .stat .num { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .stat .num small { font-size: 13px; font-weight: 600; color: var(--muted); margin-left: 2px; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+    padding: 20px 16px 12px; box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  }
+  .toolbar {
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    padding: 0 8px 8px;
+  }
+  .toggle {
+    display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden;
+  }
+  .toggle button {
+    border: 0; background: transparent; padding: 6px 14px; font-size: 13px;
+    cursor: pointer; color: var(--muted); font-family: inherit;
+  }
+  .toggle button.active { background: var(--ink); color: #fff; }
+  .chart-box { position: relative; }
+  svg { display: block; width: 100%; height: auto; }
+  .tooltip {
+    position: absolute; pointer-events: none; opacity: 0;
+    background: rgba(26,26,26,.92); color: #fff; font-size: 13px;
+    padding: 6px 10px; border-radius: 8px; white-space: nowrap;
+    transform: translate(-50%, -120%); transition: opacity .12s;
+    font-variant-numeric: tabular-nums;
+  }
+  .tooltip .tt-year { color: #f0b4a6; font-weight: 700; margin-right: 6px; }
+  .note { font-size: 13px; color: var(--muted); margin-top: 16px; }
+  footer {
+    margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line);
+    font-size: 13px; color: var(--muted);
+  }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">World Bank Open Data</div>
+    <h1>中国の一人当たりGDPの推移</h1>
+    <p class="sub">GDP per capita, China — 名目・米ドル建て（current US$）／ 1960–2025年</p>
+  </header>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="label">1960年</div>
+      <div class="num">$90<small>US$</small></div>
+    </div>
+    <div class="stat">
+      <div class="label">2025年（最新）</div>
+      <div class="num">$13,862<small>US$</small></div>
+    </div>
+    <div class="stat">
+      <div class="label">65年間の増加倍率</div>
+      <div class="num">約155<small>倍</small></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="toolbar">
+      <div class="toggle" role="group" aria-label="期間切替">
+        <button data-start="1960" class="active">1960年〜</button>
+        <button data-start="1990">1990年〜</button>
+        <button data-start="2000">2000年〜</button>
+      </div>
+      <div class="toggle" role="group" aria-label="スケール切替">
+        <button id="btn-linear" class="active">リニア</button>
+        <button id="btn-log">対数</button>
+      </div>
+    </div>
+    <div class="chart-box" id="chartBox">
+      <svg id="chart" viewBox="0 0 900 480" role="img" aria-label="中国の一人当たりGDPの折れ線グラフ"></svg>
+      <div class="tooltip" id="tooltip"></div>
+    </div>
+  </div>
+
+  <p class="note">
+    対数スケールに切り替えると、低水準だった1960〜70年代の変化率も視覚的に比較できます。グラフ上にカーソルを合わせると各年の値を表示します。
+  </p>
+
+  <footer>
+    データ出典：
+    <a href="https://data.worldbank.org/indicator/NY.GDP.PCAP.CD?locations=CN" target="_blank" rel="noopener">World Bank, World Development Indicators — GDP per capita (current US$), 指標コード NY.GDP.PCAP.CD</a>
+    （2026年10月1日取得）。単位は名目・米ドル。為替レートの変動の影響を含みます。
+  </footer>
+</div>
+
+<script>
+const YEARS = [1960,1961,1962,1963,1964,1965,1966,1967,1968,1969,1970,1971,1972,1973,1974,1975,1976,1977,1978,1979,1980,1981,1982,1983,1984,1985,1986,1987,1988,1989,1990,1991,1992,1993,1994,1995,1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025];
+const VALUES = [89.72,75.97,71.06,75.33,85.59,99.22,105.24,97.24,92.44,101.32,114.14,119.36,132.7,158.24,161.29,165.35,165.68,185.73,156.66,184.29,195.15,197.43,203.72,225.87,251.19,295.01,282.45,252.26,284.02,311.43,318.5,334.13,367.82,378.94,475.68,612.68,713.34,786.74,835.1,881.15,969.2,1065.41,1163.56,1306.97,1530.93,1777.64,2129.26,2734.73,3523.44,3898.24,4629.25,5703.76,6405.06,7147.04,7781.07,8175.33,8254.87,8979.68,10085.66,10342.9,10627.46,12887.44,12970.61,12951.18,13293.12,13861.97];
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const W = 900, H = 480;
+const M = { top: 24, right: 30, bottom: 44, left: 76 };
+const PW = W - M.left - M.right;
+const PH = H - M.top - M.bottom;
+
+const svg = document.getElementById('chart');
+const tooltip = document.getElementById('tooltip');
+const chartBox = document.getElementById('chartBox');
+
+let scaleMode = 'linear';
+let startYear = 1960;
+
+const fmt = v => '$' + Math.round(v).toLocaleString('en-US');
+
+function el(name, attrs) {
+  const e = document.createElementNS(SVG_NS, name);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+function niceTicks(max, n) {
+  const raw = max / n;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const steps = [1, 2, 2.5, 5, 10];
+  let step = steps[steps.length - 1] * mag;
+  for (const s of steps) { if (s * mag >= raw) { step = s * mag; break; } }
+  const ticks = [];
+  for (let v = 0; v <= max + step * 0.001; v += step) ticks.push(v);
+  return ticks;
+}
+
+function render() {
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+  const idx0 = YEARS.indexOf(startYear);
+  const ys = YEARS.slice(idx0);
+  const vs = VALUES.slice(idx0);
+  const n = ys.length;
+  const maxV = Math.max.apply(null, vs);
+
+  const x = i => M.left + (n === 1 ? PW / 2 : (i / (n - 1)) * PW);
+  let y, yTicks;
+  if (scaleMode === 'log') {
+    const lo = Math.log10(50);
+    const hi = Math.log10(maxV * 1.08);
+    y = v => M.top + PH - ((Math.log10(v) - lo) / (hi - lo)) * PH;
+    yTicks = [100, 1000, 10000].filter(t => t < maxV * 1.08);
+  } else {
+    const hi = maxV * 1.06;
+    y = v => M.top + PH - (v / hi) * PH;
+    yTicks = niceTicks(hi, 5);
+  }
+
+  const defs = el('defs', {});
+  const grad = el('linearGradient', { id: 'area', x1: 0, y1: 0, x2: 0, y2: 1 });
+  grad.appendChild(el('stop', { offset: '0%', 'stop-color': '#c23b22', 'stop-opacity': 0.25 }));
+  grad.appendChild(el('stop', { offset: '100%', 'stop-color': '#c23b22', 'stop-opacity': 0.02 }));
+  defs.appendChild(grad);
+  svg.appendChild(defs);
+
+  yTicks.forEach(t => {
+    svg.appendChild(el('line', {
+      x1: M.left, x2: W - M.right, y1: y(t), y2: y(t),
+      stroke: '#eeeae3', 'stroke-width': 1
+    }));
+    const label = el('text', {
+      x: M.left - 10, y: y(t) + 4, 'text-anchor': 'end',
+      'font-size': 12, fill: '#6b6b6b'
+    });
+    label.textContent = '$' + t.toLocaleString('en-US');
+    svg.appendChild(label);
+  });
+  const yLabel = el('text', { x: M.left, y: M.top - 8, 'text-anchor': 'start', 'font-size': 12, fill: '#6b6b6b' });
+  yLabel.textContent = 'US$（一人当たり）';
+  svg.appendChild(yLabel);
+
+  const xStep = Math.max(1, Math.ceil(n / 12));
+  for (let i = 0; i < n; i += xStep) {
+    const label = el('text', {
+      x: x(i), y: H - M.bottom + 22, 'text-anchor': 'middle',
+      'font-size': 12, fill: '#6b6b6b'
+    });
+    label.textContent = ys[i];
+    svg.appendChild(label);
+  }
+  svg.appendChild(el('line', {
+    x1: M.left, x2: W - M.right, y1: H - M.bottom, y2: H - M.bottom,
+    stroke: '#c9c5bd', 'stroke-width': 1
+  }));
+
+  let lineD = '', areaD = '';
+  vs.forEach((v, i) => {
+    const px = x(i), py = y(v);
+    lineD += (i === 0 ? 'M' : 'L') + px.toFixed(1) + ',' + py.toFixed(1);
+  });
+  const baseY = scaleMode === 'log' ? y(50) : y(0);
+  areaD = lineD + 'L' + x(n - 1).toFixed(1) + ',' + baseY.toFixed(1) +
+          'L' + x(0).toFixed(1) + ',' + baseY.toFixed(1) + 'Z';
+
+  svg.appendChild(el('path', { d: areaD, fill: 'url(#area)' }));
+  svg.appendChild(el('path', {
+    d: lineD, fill: 'none', stroke: '#c23b22', 'stroke-width': 3,
+    'stroke-linejoin': 'round', 'stroke-linecap': 'round'
+  }));
+
+  const first = el('g', {});
+  first.appendChild(el('circle', { cx: x(0), cy: y(vs[0]), r: 5, fill: '#c23b22', stroke: '#fff', 'stroke-width': 2 }));
+  const firstLabel = el('text', { x: x(0) + 10, y: y(vs[0]) - 10, 'font-size': 13, 'font-weight': 700, fill: '#c23b22' });
+  firstLabel.textContent = fmt(vs[0]);
+  first.appendChild(firstLabel);
+  svg.appendChild(first);
+
+  const last = el('g', {});
+  last.appendChild(el('circle', { cx: x(n - 1), cy: y(vs[n - 1]), r: 5, fill: '#c23b22', stroke: '#fff', 'stroke-width': 2 }));
+  const lastLabel = el('text', { x: x(n - 1) - 10, y: y(vs[n - 1]) - 10, 'text-anchor': 'end', 'font-size': 13, 'font-weight': 700, fill: '#c23b22' });
+  lastLabel.textContent = fmt(vs[n - 1]);
+  last.appendChild(lastLabel);
+  svg.appendChild(last);
+
+  const hoverLine = el('line', {
+    y1: M.top, y2: H - M.bottom, stroke: '#c9c5bd', 'stroke-width': 1,
+    'stroke-dasharray': '4 3', visibility: 'hidden'
+  });
+  const hoverDot = el('circle', { r: 5, fill: '#c23b22', stroke: '#fff', 'stroke-width': 2, visibility: 'hidden' });
+  svg.appendChild(hoverLine);
+  svg.appendChild(hoverDot);
+
+  const overlay = el('rect', {
+    x: M.left, y: M.top, width: PW, height: PH, fill: 'transparent'
+  });
+  svg.appendChild(overlay);
+
+  overlay.addEventListener('mousemove', ev => {
+    const pt = svg.createSVGPoint();
+    pt.x = ev.clientX; pt.y = ev.clientY;
+    const loc = pt.matrixTransform(svg.getScreenCTM().inverse());
+    let i = Math.round(((loc.x - M.left) / PW) * (n - 1));
+    i = Math.max(0, Math.min(n - 1, i));
+    hoverLine.setAttribute('x1', x(i)); hoverLine.setAttribute('x2', x(i));
+    hoverLine.setAttribute('visibility', 'visible');
+    hoverDot.setAttribute('cx', x(i)); hoverDot.setAttribute('cy', y(vs[i]));
+    hoverDot.setAttribute('visibility', 'visible');
+
+    const rect = chartBox.getBoundingClientRect();
+    const sx = rect.width / W, sy = rect.height / H;
+    tooltip.style.left = (x(i) * sx) + 'px';
+    tooltip.style.top = (y(vs[i]) * sy) + 'px';
+    tooltip.innerHTML = '<span class="tt-year">' + ys[i] + '年</span>' + fmt(vs[i]);
+    tooltip.style.opacity = 1;
+  });
+  overlay.addEventListener('mouseleave', () => {
+    hoverLine.setAttribute('visibility', 'hidden');
+    hoverDot.setAttribute('visibility', 'hidden');
+    tooltip.style.opacity = 0;
+  });
+}
+
+const btnLinear = document.getElementById('btn-linear');
+const btnLog = document.getElementById('btn-log');
+function setScale(s) {
+  scaleMode = s;
+  btnLinear.classList.toggle('active', s === 'linear');
+  btnLog.classList.toggle('active', s === 'log');
+  render();
+}
+btnLinear.addEventListener('click', () => setScale('linear'));
+btnLog.addEventListener('click', () => setScale('log'));
+
+document.querySelectorAll('[data-start]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-start]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    startYear = Number(btn.dataset.start);
+    render();
+  });
+});
+
+render();
+</script>
+</body>
+</html>
